@@ -1,0 +1,205 @@
+{
+  "name": "SeggWat: Weekly Feedback Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monday 9am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "projectId": "YOUR_PROJECT_ID",
+        "returnAll": true,
+        "filters": {}
+      },
+      "id": "list-all-feedback",
+      "name": "List All Feedback",
+      "type": "n8n-nodes-seggwat.seggwatFeedback",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "seggwatApi": {
+          "id": "1",
+          "name": "SeggWat API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter to last 7 days\nconst sevenDaysAgo = new Date();\nsevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);\n\nconst recentFeedback = $input.all().filter(item => {\n  const createdAt = new Date(item.json.created_at);\n  return createdAt >= sevenDaysAgo;\n});\n\n// Group by type\nconst byType = {};\nconst byStatus = {};\n\nrecentFeedback.forEach(item => {\n  const type = item.json.type || 'Other';\n  const status = item.json.status || 'New';\n  \n  byType[type] = (byType[type] || 0) + 1;\n  byStatus[status] = (byStatus[status] || 0) + 1;\n});\n\nreturn [{\n  json: {\n    total: recentFeedback.length,\n    byType,\n    byStatus,\n    items: recentFeedback.map(f => f.json)\n  }\n}];"
+      },
+      "id": "aggregate-feedback",
+      "name": "Aggregate by Type/Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "stats",
+        "projectId": "YOUR_PROJECT_ID",
+        "pathFilter": ""
+      },
+      "id": "get-rating-stats",
+      "name": "Get Rating Stats",
+      "type": "n8n-nodes-seggwat.seggwatRating",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "seggwatApi": {
+          "id": "1",
+          "name": "SeggWat API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": []
+        },
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const feedback = $input.first().json;\nconst stats = $input.last().json;\n\nconst now = new Date();\nconst weekStart = new Date();\nweekStart.setDate(weekStart.getDate() - 7);\n\nconst formatDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });\n\nlet html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }\n    h1 { color: #2563eb; }\n    h2 { color: #374151; margin-top: 30px; }\n    .stat-box { background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 10px 0; }\n    .stat-number { font-size: 24px; font-weight: bold; color: #2563eb; }\n    .stat-label { color: #6b7280; font-size: 14px; }\n    table { width: 100%; border-collapse: collapse; margin: 15px 0; }\n    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }\n    th { background: #f9fafb; }\n    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; }\n    .bug { background: #fef2f2; color: #dc2626; }\n    .feature { background: #eff6ff; color: #2563eb; }\n    .praise { background: #f0fdf4; color: #16a34a; }\n    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }\n  </style>\n</head>\n<body>\n  <h1>📊 Weekly Feedback Report</h1>\n  <p><strong>Period:</strong> ${formatDate(weekStart)} - ${formatDate(now)}</p>\n  \n  <h2>📈 Summary</h2>\n  <div class=\"stat-box\">\n    <div class=\"stat-number\">${feedback.total}</div>\n    <div class=\"stat-label\">Total Feedback Items</div>\n  </div>\n  \n  <h2>📝 Feedback by Type</h2>\n  <table>\n    <tr><th>Type</th><th>Count</th></tr>\n`;\n\nObject.entries(feedback.byType || {}).forEach(([type, count]) => {\n  html += `<tr><td><span class=\"badge ${type.toLowerCase()}\">${type}</span></td><td>${count}</td></tr>`;\n});\n\nhtml += `\n  </table>\n  \n  <h2>📋 Feedback by Status</h2>\n  <table>\n    <tr><th>Status</th><th>Count</th></tr>\n`;\n\nObject.entries(feedback.byStatus || {}).forEach(([status, count]) => {\n  html += `<tr><td>${status}</td><td>${count}</td></tr>`;\n});\n\nhtml += `\n  </table>\n  \n  <h2>👍 Rating Statistics</h2>\n  <div class=\"stat-box\">\n    <div class=\"stat-number\">${stats.helpful_percentage || 0}%</div>\n    <div class=\"stat-label\">Helpfulness Rating</div>\n  </div>\n  <table>\n    <tr><td>Total Ratings</td><td>${stats.total || 0}</td></tr>\n    <tr><td>👍 Helpful</td><td>${stats.helpful || 0}</td></tr>\n    <tr><td>👎 Not Helpful</td><td>${stats.not_helpful || 0}</td></tr>\n  </table>\n  \n  <div class=\"footer\">\n    <p>This report was automatically generated by SeggWat + n8n.</p>\n    <p><a href=\"https://seggwat.com/dashboard\">View Dashboard</a></p>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{ json: { html, subject: `Weekly Feedback Report - ${formatDate(weekStart)} to ${formatDate(now)}` } }];"
+      },
+      "id": "generate-report",
+      "name": "Generate HTML Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "reports@yourcompany.com",
+        "toEmail": "product-team@yourcompany.com",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "send-report",
+      "name": "Send Report Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "credentials": {
+        "smtp": {
+          "id": "3",
+          "name": "SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Monday 9am": {
+      "main": [
+        [
+          {
+            "node": "List All Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List All Feedback": {
+      "main": [
+        [
+          {
+            "node": "Aggregate by Type/Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate by Type/Status": {
+      "main": [
+        [
+          {
+            "node": "Get Rating Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rating Stats": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Generate HTML Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate HTML Report": {
+      "main": [
+        [
+          {
+            "node": "Send Report Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "SeggWat",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Reports",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "Scheduled",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
