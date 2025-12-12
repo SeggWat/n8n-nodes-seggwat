@@ -14,11 +14,11 @@
 	"homepage": "https://seggwat.com",
 	"author": {
 		"name": "SeggWat",
-		"email": "support@seggwat.com"
+		"email": "info@seggwat.com"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/seggwat/n8n-nodes-seggwat.git"
+		"url": "https://github.com/SeggWat/n8n-nodes-seggwat.git"
 	},
 	"engines": {
 		"node": ">=18.10",
