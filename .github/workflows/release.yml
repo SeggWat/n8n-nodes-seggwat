@@ -83,6 +83,9 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Publish to npm (Trusted Publishing)
         if: vars.USE_NPM_TRUSTED_PUBLISHING == 'true'
         run: pnpm publish --provenance --access public --no-git-checks
