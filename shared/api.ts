@@ -189,6 +189,37 @@ export const FEEDBACK_SOURCES = [
 ];
 
 /**
+ * Simplify feedback data to show only essential fields
+ */
+export function simplifyFeedback(feedback: IDataObject): IDataObject {
+	return {
+		id: feedback.id,
+		message: feedback.message,
+		type: feedback.type,
+		status: feedback.status,
+		path: feedback.path,
+		version: feedback.version,
+		source: feedback.source,
+		submitted_by: feedback.submitted_by,
+		created_at: feedback.created_at,
+	};
+}
+
+/**
+ * Simplify rating data to show only essential fields
+ */
+export function simplifyRating(rating: IDataObject): IDataObject {
+	return {
+		id: rating.id,
+		value: rating.value,
+		path: rating.path,
+		version: rating.version,
+		submitted_by: rating.submitted_by,
+		created_at: rating.created_at,
+	};
+}
+
+/**
  * Load projects from SeggWat API for dropdown
  */
 export async function getProjects(

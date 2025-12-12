@@ -15,6 +15,8 @@ import {
 	getProjects,
 	seggwatApiRequest,
 	seggwatApiRequestAllItems,
+	simplifyFeedback,
+	simplifyRating,
 } from '../../shared/api';
 
 export class Seggwat implements INodeType {
@@ -74,31 +76,31 @@ export class Seggwat implements INodeType {
 					{
 						name: 'Submit',
 						value: 'submit',
-						description: 'Submit new feedback',
+						description: 'Create a new feedback entry in a project',
 						action: 'Submit feedback',
 					},
 					{
 						name: 'List',
 						value: 'list',
-						description: 'List feedback for a project',
+						description: 'Retrieve all feedback items with optional filtering',
 						action: 'List feedback',
 					},
 					{
 						name: 'Get',
 						value: 'get',
-						description: 'Get a single feedback item',
+						description: 'Retrieve a specific feedback item by ID',
 						action: 'Get feedback',
 					},
 					{
 						name: 'Update',
 						value: 'update',
-						description: 'Update a feedback item',
+						description: 'Modify an existing feedback item',
 						action: 'Update feedback',
 					},
 					{
 						name: 'Delete',
 						value: 'delete',
-						description: 'Delete a feedback item',
+						description: 'Remove a feedback item permanently',
 						action: 'Delete feedback',
 					},
 				],
@@ -122,31 +124,31 @@ export class Seggwat implements INodeType {
 					{
 						name: 'Submit',
 						value: 'submit',
-						description: 'Submit a new rating',
+						description: 'Create a new helpful/not helpful rating for content',
 						action: 'Submit rating',
 					},
 					{
 						name: 'List',
 						value: 'list',
-						description: 'List ratings for a project',
+						description: 'Retrieve all ratings with optional filtering by path or value',
 						action: 'List ratings',
 					},
 					{
 						name: 'Get',
 						value: 'get',
-						description: 'Get a single rating',
+						description: 'Retrieve a specific rating by ID',
 						action: 'Get rating',
 					},
 					{
 						name: 'Get Statistics',
 						value: 'stats',
-						description: 'Get rating statistics for a project',
+						description: 'Retrieve aggregated rating statistics and metrics',
 						action: 'Get rating statistics',
 					},
 					{
 						name: 'Delete',
 						value: 'delete',
-						description: 'Delete a rating',
+						description: 'Remove a rating permanently',
 						action: 'Delete rating',
 					},
 				],
@@ -208,14 +210,16 @@ export class Seggwat implements INodeType {
 						name: 'path',
 						type: 'string',
 						default: '',
-						description: 'The page path where feedback was submitted (e.g., /docs/getting-started)',
+						placeholder: 'e.g. /docs/getting-started',
+						description: 'The page path where feedback was submitted',
 					},
 					{
 						displayName: 'Version',
 						name: 'version',
 						type: 'string',
 						default: '',
-						description: 'Application version (e.g., 1.2.3)',
+						placeholder: 'e.g. 1.2.3',
+						description: 'Application version',
 					},
 					{
 						displayName: 'Source',
@@ -230,6 +234,7 @@ export class Seggwat implements INodeType {
 						name: 'submitted_by',
 						type: 'string',
 						default: '',
+						placeholder: 'e.g. user@example.com',
 						description: 'User identifier who submitted the feedback',
 					},
 				],
@@ -287,6 +292,19 @@ export class Seggwat implements INodeType {
 				description: 'Max number of results to return',
 			},
 			{
+				displayName: 'Simplify',
+				name: 'simplify',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						resource: ['feedback'],
+						operation: ['list'],
+					},
+				},
+				description: 'Whether to return a simplified version of the response instead of the raw data',
+			},
+			{
 				displayName: 'Filters',
 				name: 'filters',
 				type: 'collection',
@@ -324,6 +342,46 @@ export class Seggwat implements INodeType {
 					},
 				],
 			},
+			{
+				displayName: 'Options',
+				name: 'options',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['feedback'],
+						operation: ['list'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Sort',
+						name: 'sort',
+						type: 'options',
+						options: [
+							{
+								name: 'Created (Newest First)',
+								value: '-created_at',
+							},
+							{
+								name: 'Created (Oldest First)',
+								value: 'created_at',
+							},
+							{
+								name: 'Updated (Newest First)',
+								value: '-updated_at',
+							},
+							{
+								name: 'Updated (Oldest First)',
+								value: 'updated_at',
+							},
+						],
+						default: '-created_at',
+						description: 'How to sort the results',
+					},
+				],
+			},
 
 			// ============================================
 			// FEEDBACK: Get Operation Fields
@@ -351,6 +409,7 @@ export class Seggwat implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
+				placeholder: 'e.g. 123e4567-e89b-12d3-a456-426614174000',
 				displayOptions: {
 					show: {
 						resource: ['feedback'],
@@ -358,6 +417,19 @@ export class Seggwat implements INodeType {
 					},
 				},
 				description: 'The ID of the feedback item to retrieve',
+			},
+			{
+				displayName: 'Simplify',
+				name: 'simplify',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						resource: ['feedback'],
+						operation: ['get'],
+					},
+				},
+				description: 'Whether to return a simplified version of the response instead of the raw data',
 			},
 
 			// ============================================
@@ -386,6 +458,7 @@ export class Seggwat implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
+				placeholder: 'e.g. 123e4567-e89b-12d3-a456-426614174000',
 				displayOptions: {
 					show: {
 						resource: ['feedback'],
@@ -462,6 +535,7 @@ export class Seggwat implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
+				placeholder: 'e.g. 123e4567-e89b-12d3-a456-426614174000',
 				displayOptions: {
 					show: {
 						resource: ['feedback'],
@@ -521,13 +595,14 @@ export class Seggwat implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
+				placeholder: 'e.g. /docs/getting-started',
 				displayOptions: {
 					show: {
 						resource: ['rating'],
 						operation: ['submit'],
 					},
 				},
-				description: 'The page path being rated (e.g., /docs/getting-started)',
+				description: 'The page path being rated',
 			},
 			{
 				displayName: 'Additional Fields',
@@ -547,13 +622,15 @@ export class Seggwat implements INodeType {
 						name: 'version',
 						type: 'string',
 						default: '',
-						description: 'Application version (e.g., 1.2.3)',
+						placeholder: 'e.g. 1.2.3',
+						description: 'Application version',
 					},
 					{
 						displayName: 'Submitted By',
 						name: 'submitted_by',
 						type: 'string',
 						default: '',
+						placeholder: 'e.g. user@example.com',
 						description: 'User identifier who submitted the rating',
 					},
 				],
@@ -611,6 +688,19 @@ export class Seggwat implements INodeType {
 				description: 'Max number of results to return',
 			},
 			{
+				displayName: 'Simplify',
+				name: 'simplify',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						resource: ['rating'],
+						operation: ['list'],
+					},
+				},
+				description: 'Whether to return a simplified version of the response instead of the raw data',
+			},
+			{
 				displayName: 'Filters',
 				name: 'filters',
 				type: 'collection',
@@ -653,6 +743,38 @@ export class Seggwat implements INodeType {
 					},
 				],
 			},
+			{
+				displayName: 'Options',
+				name: 'options',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				displayOptions: {
+					show: {
+						resource: ['rating'],
+						operation: ['list'],
+					},
+				},
+				options: [
+					{
+						displayName: 'Sort',
+						name: 'sort',
+						type: 'options',
+						options: [
+							{
+								name: 'Created (Newest First)',
+								value: '-created_at',
+							},
+							{
+								name: 'Created (Oldest First)',
+								value: 'created_at',
+							},
+						],
+						default: '-created_at',
+						description: 'How to sort the results',
+					},
+				],
+			},
 
 			// ============================================
 			// RATING: Get Operation Fields
@@ -680,6 +802,7 @@ export class Seggwat implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
+				placeholder: 'e.g. 123e4567-e89b-12d3-a456-426614174000',
 				displayOptions: {
 					show: {
 						resource: ['rating'],
@@ -687,6 +810,19 @@ export class Seggwat implements INodeType {
 					},
 				},
 				description: 'The ID of the rating to retrieve',
+			},
+			{
+				displayName: 'Simplify',
+				name: 'simplify',
+				type: 'boolean',
+				default: true,
+				displayOptions: {
+					show: {
+						resource: ['rating'],
+						operation: ['get'],
+					},
+				},
+				description: 'Whether to return a simplified version of the response instead of the raw data',
 			},
 
 			// ============================================
@@ -714,6 +850,7 @@ export class Seggwat implements INodeType {
 				name: 'pathFilter',
 				type: 'string',
 				default: '',
+				placeholder: 'e.g. /docs/api',
 				displayOptions: {
 					show: {
 						resource: ['rating'],
@@ -749,6 +886,7 @@ export class Seggwat implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
+				placeholder: 'e.g. 123e4567-e89b-12d3-a456-426614174000',
 				displayOptions: {
 					show: {
 						resource: ['rating'],
@@ -799,9 +937,14 @@ export class Seggwat implements INodeType {
 					} else if (operation === 'list') {
 						const projectId = this.getNodeParameter('projectId', i) as string;
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+						const simplify = this.getNodeParameter('simplify', i) as boolean;
 						const filters = this.getNodeParameter('filters', i) as IDataObject;
+						const options = this.getNodeParameter('options', i) as IDataObject;
 
 						const query: IDataObject = { ...filters };
+						if (options.sort) {
+							query.sort = options.sort;
+						}
 
 						if (returnAll) {
 							responseData = await seggwatApiRequestAllItems.call(
@@ -827,15 +970,24 @@ export class Seggwat implements INodeType {
 
 							responseData = (response.feedback as IDataObject[]) || [];
 						}
+
+						if (simplify && Array.isArray(responseData)) {
+							responseData = responseData.map((item) => simplifyFeedback(item));
+						}
 					} else if (operation === 'get') {
 						const projectId = this.getNodeParameter('projectId', i) as string;
 						const feedbackId = this.getNodeParameter('feedbackId', i) as string;
+						const simplify = this.getNodeParameter('simplify', i) as boolean;
 
 						responseData = await seggwatApiRequest.call(
 							this,
 							'GET',
 							`/projects/${projectId}/feedback/${feedbackId}`,
 						);
+
+						if (simplify) {
+							responseData = simplifyFeedback(responseData as IDataObject);
+						}
 					} else if (operation === 'update') {
 						const projectId = this.getNodeParameter('projectId', i) as string;
 						const feedbackId = this.getNodeParameter('feedbackId', i) as string;
@@ -861,7 +1013,7 @@ export class Seggwat implements INodeType {
 							`/projects/${projectId}/feedback/${feedbackId}`,
 						);
 
-						responseData = { success: true, deleted: feedbackId };
+						responseData = { deleted: true };
 					} else {
 						throw new Error(`Unknown feedback operation: ${operation}`);
 					}
@@ -885,7 +1037,9 @@ export class Seggwat implements INodeType {
 					} else if (operation === 'list') {
 						const projectId = this.getNodeParameter('projectId', i) as string;
 						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+						const simplify = this.getNodeParameter('simplify', i) as boolean;
 						const filters = this.getNodeParameter('filters', i) as IDataObject;
+						const options = this.getNodeParameter('options', i) as IDataObject;
 
 						const query: IDataObject = {};
 						if (filters.path) {
@@ -893,6 +1047,9 @@ export class Seggwat implements INodeType {
 						}
 						if (filters.value && filters.value !== '') {
 							query.value = filters.value === 'true';
+						}
+						if (options.sort) {
+							query.sort = options.sort;
 						}
 
 						if (returnAll) {
@@ -919,15 +1076,24 @@ export class Seggwat implements INodeType {
 
 							responseData = (response.ratings as IDataObject[]) || [];
 						}
+
+						if (simplify && Array.isArray(responseData)) {
+							responseData = responseData.map((item) => simplifyRating(item));
+						}
 					} else if (operation === 'get') {
 						const projectId = this.getNodeParameter('projectId', i) as string;
 						const ratingId = this.getNodeParameter('ratingId', i) as string;
+						const simplify = this.getNodeParameter('simplify', i) as boolean;
 
 						responseData = await seggwatApiRequest.call(
 							this,
 							'GET',
 							`/projects/${projectId}/ratings/${ratingId}`,
 						);
+
+						if (simplify) {
+							responseData = simplifyRating(responseData as IDataObject);
+						}
 					} else if (operation === 'stats') {
 						const projectId = this.getNodeParameter('projectId', i) as string;
 						const pathFilter = this.getNodeParameter('pathFilter', i) as string;
@@ -954,7 +1120,7 @@ export class Seggwat implements INodeType {
 							`/projects/${projectId}/ratings/${ratingId}`,
 						);
 
-						responseData = { success: true, deleted: ratingId };
+						responseData = { deleted: true };
 					} else {
 						throw new Error(`Unknown rating operation: ${operation}`);
 					}
