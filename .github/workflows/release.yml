@@ -1,0 +1,134 @@
+name: Release & Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  validate-and-build:
+    name: Validate & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linter
+        run: pnpm lintcheck
+
+      - name: Build package
+        run: pnpm build
+
+      - name: Verify build artifacts
+        run: |
+          echo "Verifying required build artifacts..."
+          test -f dist/index.js || (echo "Error: dist/index.js not found" && exit 1)
+          test -f dist/credentials/SeggwatApi.credentials.js || (echo "Error: credentials file not found" && exit 1)
+          test -f dist/nodes/Seggwat/Seggwat.node.js || (echo "Error: node file not found" && exit 1)
+          test -f dist/nodes/Seggwat/seggwat.svg || (echo "Error: icon file not found" && exit 1)
+          echo "All build artifacts verified successfully!"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            dist/
+            package.json
+            README.md
+            LICENSE
+          retention-days: 1
+
+  publish-npm:
+    name: Publish to npm
+    needs: validate-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm (Trusted Publishing)
+        if: vars.USE_NPM_TRUSTED_PUBLISHING == 'true'
+        run: pnpm publish --provenance --access public --no-git-checks
+
+      - name: Publish to npm (Token)
+        if: vars.USE_NPM_TRUSTED_PUBLISHING != 'true'
+        run: pnpm publish --provenance --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-release:
+    name: Create GitHub Release
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            Install from npm:
+            ```bash
+            npm install n8n-nodes-seggwat@${{ steps.version.outputs.VERSION }}
+            ```
+
+            Or with pnpm:
+            ```bash
+            pnpm add n8n-nodes-seggwat@${{ steps.version.outputs.VERSION }}
+            ```
+
+            ## Package Links
+
+            - [npm Package](https://www.npmjs.com/package/n8n-nodes-seggwat/v/${{ steps.version.outputs.VERSION }})
+            - [Documentation](https://github.com/seggwat/n8n-nodes-seggwat#readme)
+
+            ---

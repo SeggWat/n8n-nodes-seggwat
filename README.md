@@ -1,5 +1,9 @@
 # n8n-nodes-seggwat
 
+[![CI](https://github.com/seggwat/n8n-nodes-seggwat/actions/workflows/ci.yml/badge.svg)](https://github.com/seggwat/n8n-nodes-seggwat/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/n8n-nodes-seggwat)](https://www.npmjs.com/package/n8n-nodes-seggwat)
+[![npm downloads](https://img.shields.io/npm/dm/n8n-nodes-seggwat)](https://www.npmjs.com/package/n8n-nodes-seggwat)
+
 This is an n8n community node package for [SeggWat](https://seggwat.com) - a feedback collection platform for product teams.
 
 ## Features
@@ -135,10 +139,20 @@ pnpm link
 
 ### Publishing
 
+Publishing is automated via GitHub Actions. To release a new version:
+
 ```bash
+# Update version and create git tag
 pnpm version patch  # or minor/major
-pnpm publish
+
+# Push changes and tags to trigger automated release
+git push --follow-tags
 ```
+
+The CI/CD pipeline will automatically:
+- Run linting and build validation
+- Publish to npm with provenance attestation
+- Create a GitHub Release with release notes
 
 ## Feedback Types
 
@@ -172,4 +186,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - **Bug Reports**: [GitHub Issues](https://github.com/seggwat/n8n-nodes-seggwat/issues)
 - **Questions**: [SeggWat Discord](https://discord.gg/seggwat)
-- **Email**: support@seggwat.com
+- **Email**: info@seggwat.com

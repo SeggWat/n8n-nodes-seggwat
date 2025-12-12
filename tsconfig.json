@@ -22,6 +22,6 @@
 		"strictPropertyInitialization": true,
 		"types": ["node"]
 	},
-	"include": ["credentials/**/*.ts", "nodes/**/*.ts", "shared/**/*.ts"],
+	"include": ["index.ts", "credentials/**/*.ts", "nodes/**/*.ts", "shared/**/*.ts"],
 	"exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }
