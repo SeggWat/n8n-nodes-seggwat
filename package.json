@@ -53,7 +53,7 @@
 		"@typescript-eslint/parser": "^7.0.0",
 		"eslint": "^8.56.0",
 		"eslint-plugin-n8n-nodes-base": "^1.16.1",
-		"n8n-workflow": "^1.35.0",
+		"n8n-workflow": "^2.0.1",
 		"prettier": "^3.2.0",
 		"typescript": "^5.3.0"
 	},
