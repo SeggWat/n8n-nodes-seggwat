@@ -7,6 +7,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 import {
 	FEEDBACK_SOURCES,
@@ -23,7 +24,7 @@ export class Seggwat implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SeggWat',
 		name: 'seggwat',
-		icon: 'file:seggwat.svg',
+		icon: 'file:../../icons/seggwat.svg',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
@@ -39,6 +40,7 @@ export class Seggwat implements INodeType {
 				required: true,
 			},
 		],
+		usableAsTool: true,
 		properties: [
 			// Resource selector
 			{
@@ -74,16 +76,10 @@ export class Seggwat implements INodeType {
 				},
 				options: [
 					{
-						name: 'Submit',
-						value: 'submit',
-						description: 'Create a new feedback entry in a project',
-						action: 'Submit feedback',
-					},
-					{
-						name: 'List',
-						value: 'list',
-						description: 'Retrieve all feedback items with optional filtering',
-						action: 'List feedback',
+						name: 'Delete',
+						value: 'delete',
+						description: 'Remove a feedback item permanently',
+						action: 'Delete feedback',
 					},
 					{
 						name: 'Get',
@@ -92,16 +88,22 @@ export class Seggwat implements INodeType {
 						action: 'Get feedback',
 					},
 					{
+						name: 'List',
+						value: 'list',
+						description: 'Retrieve all feedback items with optional filtering',
+						action: 'List feedback',
+					},
+					{
+						name: 'Submit',
+						value: 'submit',
+						description: 'Create a new feedback entry in a project',
+						action: 'Submit feedback',
+					},
+					{
 						name: 'Update',
 						value: 'update',
 						description: 'Modify an existing feedback item',
 						action: 'Update feedback',
-					},
-					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Remove a feedback item permanently',
-						action: 'Delete feedback',
 					},
 				],
 				default: 'list',
@@ -122,16 +124,10 @@ export class Seggwat implements INodeType {
 				},
 				options: [
 					{
-						name: 'Submit',
-						value: 'submit',
-						description: 'Create a new helpful/not helpful rating for content',
-						action: 'Submit rating',
-					},
-					{
-						name: 'List',
-						value: 'list',
-						description: 'Retrieve all ratings with optional filtering by path or value',
-						action: 'List ratings',
+						name: 'Delete',
+						value: 'delete',
+						description: 'Remove a rating permanently',
+						action: 'Delete rating',
 					},
 					{
 						name: 'Get',
@@ -146,10 +142,16 @@ export class Seggwat implements INodeType {
 						action: 'Get rating statistics',
 					},
 					{
-						name: 'Delete',
-						value: 'delete',
-						description: 'Remove a rating permanently',
-						action: 'Delete rating',
+						name: 'List',
+						value: 'list',
+						description: 'Retrieve all ratings with optional filtering by path or value',
+						action: 'List ratings',
+					},
+					{
+						name: 'Submit',
+						value: 'submit',
+						description: 'Create a new helpful/not helpful rating for content',
+						action: 'Submit rating',
 					},
 				],
 				default: 'list',
@@ -159,7 +161,7 @@ export class Seggwat implements INodeType {
 			// FEEDBACK: Submit Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -173,7 +175,8 @@ export class Seggwat implements INodeType {
 						operation: ['submit'],
 					},
 				},
-				description: 'The project to submit feedback to',
+				description:
+					'The project to submit feedback to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Message',
@@ -244,7 +247,7 @@ export class Seggwat implements INodeType {
 			// FEEDBACK: List Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -258,7 +261,8 @@ export class Seggwat implements INodeType {
 						operation: ['list'],
 					},
 				},
-				description: 'The project to list feedback from',
+				description:
+					'The project to list feedback from. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Return All',
@@ -281,7 +285,7 @@ export class Seggwat implements INodeType {
 					minValue: 1,
 					maxValue: 100,
 				},
-				default: 20,
+				default: 50,
 				displayOptions: {
 					show: {
 						resource: ['feedback'],
@@ -388,7 +392,7 @@ export class Seggwat implements INodeType {
 			// FEEDBACK: Get Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -402,7 +406,8 @@ export class Seggwat implements INodeType {
 						operation: ['get'],
 					},
 				},
-				description: 'The project the feedback belongs to',
+				description:
+					'The project the feedback belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Feedback ID',
@@ -438,7 +443,7 @@ export class Seggwat implements INodeType {
 			// FEEDBACK: Update Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -452,7 +457,8 @@ export class Seggwat implements INodeType {
 						operation: ['update'],
 					},
 				},
-				description: 'The project the feedback belongs to',
+				description:
+					'The project the feedback belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Feedback ID',
@@ -515,7 +521,7 @@ export class Seggwat implements INodeType {
 			// FEEDBACK: Delete Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -529,7 +535,8 @@ export class Seggwat implements INodeType {
 						operation: ['delete'],
 					},
 				},
-				description: 'The project the feedback belongs to',
+				description:
+					'The project the feedback belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Feedback ID',
@@ -551,7 +558,7 @@ export class Seggwat implements INodeType {
 			// RATING: Submit Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -565,7 +572,8 @@ export class Seggwat implements INodeType {
 						operation: ['submit'],
 					},
 				},
-				description: 'The project to submit rating to',
+				description:
+					'The project to submit rating to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Value',
@@ -642,7 +650,7 @@ export class Seggwat implements INodeType {
 			// RATING: List Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -656,7 +664,8 @@ export class Seggwat implements INodeType {
 						operation: ['list'],
 					},
 				},
-				description: 'The project to list ratings from',
+				description:
+					'The project to list ratings from. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Return All',
@@ -679,7 +688,7 @@ export class Seggwat implements INodeType {
 					minValue: 1,
 					maxValue: 100,
 				},
-				default: 20,
+				default: 50,
 				displayOptions: {
 					show: {
 						resource: ['rating'],
@@ -783,7 +792,7 @@ export class Seggwat implements INodeType {
 			// RATING: Get Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -797,7 +806,8 @@ export class Seggwat implements INodeType {
 						operation: ['get'],
 					},
 				},
-				description: 'The project the rating belongs to',
+				description:
+					'The project the rating belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Rating ID',
@@ -833,7 +843,7 @@ export class Seggwat implements INodeType {
 			// RATING: Stats Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -847,7 +857,8 @@ export class Seggwat implements INodeType {
 						operation: ['stats'],
 					},
 				},
-				description: 'The project to get statistics for',
+				description:
+					'The project to get statistics for. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Path Filter',
@@ -868,7 +879,7 @@ export class Seggwat implements INodeType {
 			// RATING: Delete Operation Fields
 			// ============================================
 			{
-				displayName: 'Project',
+				displayName: 'Project Name or ID',
 				name: 'projectId',
 				type: 'options',
 				typeOptions: {
@@ -882,7 +893,8 @@ export class Seggwat implements INodeType {
 						operation: ['delete'],
 					},
 				},
-				description: 'The project the rating belongs to',
+				description:
+					'The project the rating belongs to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Rating ID',
@@ -998,7 +1010,11 @@ export class Seggwat implements INodeType {
 						const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
 
 						if (Object.keys(updateFields).length === 0) {
-							throw new Error('At least one field must be provided to update');
+							throw new NodeOperationError(
+								this.getNode(),
+								'At least one field must be provided to update',
+								{ itemIndex: i },
+							);
 						}
 
 						responseData = await seggwatApiRequest.call(
@@ -1019,7 +1035,10 @@ export class Seggwat implements INodeType {
 
 						responseData = { deleted: true };
 					} else {
-						throw new Error(`Unknown feedback operation: ${operation}`);
+						throw new NodeOperationError(
+							this.getNode(),
+							`Unknown feedback operation: ${operation}`,
+						);
 					}
 				} else if (resource === 'rating') {
 					// RATING OPERATIONS
@@ -1126,10 +1145,10 @@ export class Seggwat implements INodeType {
 
 						responseData = { deleted: true };
 					} else {
-						throw new Error(`Unknown rating operation: ${operation}`);
+						throw new NodeOperationError(this.getNode(), `Unknown rating operation: ${operation}`);
 					}
 				} else {
-					throw new Error(`Unknown resource: ${resource}`);
+					throw new NodeOperationError(this.getNode(), `Unknown resource: ${resource}`);
 				}
 
 				// Handle array vs single object response

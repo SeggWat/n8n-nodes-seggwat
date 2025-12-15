@@ -59,6 +59,8 @@ credentials/
 nodes/
   Seggwat/
     Seggwat.node.ts            # Unified node with Feedback & Rating resources
+  
+  icons/
     seggwat.svg                # Node icon
 
 shared/

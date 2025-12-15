@@ -3,12 +3,14 @@ import type {
 	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
+	Icon,
 } from 'n8n-workflow';
 
 export class SeggwatApi implements ICredentialType {
 	name = 'seggwatApi';
 	displayName = 'SeggWat API';
 	documentationUrl = 'https://seggwat.com/docs/api-reference';
+	icon: Icon = 'file:../icons/seggwat.svg';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'API Key',

@@ -45,7 +45,7 @@ jobs:
           test -f dist/index.js || (echo "Error: dist/index.js not found" && exit 1)
           test -f dist/credentials/SeggwatApi.credentials.js || (echo "Error: credentials file not found" && exit 1)
           test -f dist/nodes/Seggwat/Seggwat.node.js || (echo "Error: node file not found" && exit 1)
-          test -f dist/nodes/Seggwat/seggwat.svg || (echo "Error: icon file not found" && exit 1)
+          test -f dist/icons/seggwat.svg || (echo "Error: icon file not found" && exit 1)
           echo "All build artifacts verified successfully!"
 
       - name: Upload build artifacts
