@@ -1,6 +1,6 @@
 services:
   n8n:
-    image: n8nio/n8n
+    image: n8nio/n8n:2.0.2
     restart: always
     ports:
       - 5678:5678
@@ -8,6 +8,5 @@ services:
       - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
     volumes:
       - ~/.n8n:/home/node/.n8n
-      - /Users/hauju/Projects/seggwat/n8n-nodes-seggwat:/home/node/.n8n/custom/n8n-nodes-seggwat
     extra_hosts:
       - 'host.docker.internal:host-gateway'

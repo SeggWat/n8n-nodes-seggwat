@@ -302,7 +302,8 @@ export class Seggwat implements INodeType {
 						operation: ['list'],
 					},
 				},
-				description: 'Whether to return a simplified version of the response instead of the raw data',
+				description:
+					'Whether to return a simplified version of the response instead of the raw data',
 			},
 			{
 				displayName: 'Filters',
@@ -321,7 +322,7 @@ export class Seggwat implements INodeType {
 						displayName: 'Status',
 						name: 'status',
 						type: 'options',
-						options: FEEDBACK_STATUSES,
+						options: [{ name: 'All', value: '' }, ...FEEDBACK_STATUSES],
 						default: '',
 						description: 'Filter by feedback status',
 					},
@@ -329,7 +330,7 @@ export class Seggwat implements INodeType {
 						displayName: 'Type',
 						name: 'type',
 						type: 'options',
-						options: FEEDBACK_TYPES,
+						options: [{ name: 'All', value: '' }, ...FEEDBACK_TYPES],
 						default: '',
 						description: 'Filter by feedback type',
 					},
@@ -429,7 +430,8 @@ export class Seggwat implements INodeType {
 						operation: ['get'],
 					},
 				},
-				description: 'Whether to return a simplified version of the response instead of the raw data',
+				description:
+					'Whether to return a simplified version of the response instead of the raw data',
 			},
 
 			// ============================================
@@ -494,7 +496,7 @@ export class Seggwat implements INodeType {
 						displayName: 'Type',
 						name: 'type',
 						type: 'options',
-						options: FEEDBACK_TYPES,
+						options: [{ name: '(No Change)', value: '' }, ...FEEDBACK_TYPES],
 						default: '',
 						description: 'Updated feedback type',
 					},
@@ -502,7 +504,7 @@ export class Seggwat implements INodeType {
 						displayName: 'Status',
 						name: 'status',
 						type: 'options',
-						options: FEEDBACK_STATUSES,
+						options: [{ name: '(No Change)', value: '' }, ...FEEDBACK_STATUSES],
 						default: '',
 						description: 'Updated feedback status',
 					},
@@ -698,7 +700,8 @@ export class Seggwat implements INodeType {
 						operation: ['list'],
 					},
 				},
-				description: 'Whether to return a simplified version of the response instead of the raw data',
+				description:
+					'Whether to return a simplified version of the response instead of the raw data',
 			},
 			{
 				displayName: 'Filters',
@@ -822,7 +825,8 @@ export class Seggwat implements INodeType {
 						operation: ['get'],
 					},
 				},
-				description: 'Whether to return a simplified version of the response instead of the raw data',
+				description:
+					'Whether to return a simplified version of the response instead of the raw data',
 			},
 
 			// ============================================

@@ -1,4 +1,9 @@
-import { ICredentialType, INodeProperties } from 'n8n-workflow';
+import type {
+	IAuthenticateGeneric,
+	ICredentialTestRequest,
+	ICredentialType,
+	INodeProperties,
+} from 'n8n-workflow';
 
 export class SeggwatApi implements ICredentialType {
 	name = 'seggwatApi';
@@ -25,4 +30,21 @@ export class SeggwatApi implements ICredentialType {
 			description: 'Base URL for SeggWat API (change for self-hosted instances)',
 		},
 	];
+
+	authenticate: IAuthenticateGeneric = {
+		type: 'generic',
+		properties: {
+			headers: {
+				'X-API-Key': '={{$credentials.apiKey}}',
+			},
+		},
+	};
+
+	test: ICredentialTestRequest = {
+		request: {
+			baseURL: '={{$credentials?.apiUrl || "https://seggwat.com"}}',
+			url: '/api/v1/projects',
+			method: 'GET',
+		},
+	};
 }

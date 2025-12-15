@@ -22,11 +22,11 @@ pnpm dev
 # Format code
 pnpm format
 
-# Lint and auto-fix
+# Lint
 pnpm lint
 
-# Lint without fixing
-pnpm lintcheck
+# Lint and auto-fix
+pnpm lint
 ```
 
 ### Local Testing with n8n
